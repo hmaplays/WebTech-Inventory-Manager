@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Product</title>
+<style>
+    body { 
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        background-color: #0a0a0a; 
+        color: #ffffff;
+        padding: 40px 20px; 
+        margin: 0; 
+    }
+    .container { 
+        max-width: 400px; 
+        margin: auto; 
+        background: #141414; 
+        padding: 30px; 
+        border-radius: 8px; 
+        border: 2px solid #00ff00; /* Neon green border */
+        box-shadow: 0 0 15px rgba(0, 255, 0, 0.15);
+    }
+    h1 { 
+        color: #ffffff; 
+        margin-top: 0;
+        text-align: center;
+    }
+    .form-group { margin-bottom: 20px; }
+    label { 
+        display: block; 
+        margin-bottom: 8px; 
+        font-weight: bold; 
+        color: #aaaaaa; /* Light gray labels */
+    }
+    input { 
+        width: 100%; 
+        padding: 12px; 
+        background-color: #1a1a1a; /* Dark input boxes */
+        border: 1px solid #444444; 
+        color: #ffffff;
+        border-radius: 5px; 
+        box-sizing: border-box; 
+        transition: 0.3s;
+    }
+    input:focus {
+        outline: none;
+        border-color: #00ff00;
+        box-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
+    }
+    
+    /* "Save" Button - Solid Style */
+    .btn { 
+        width: 100%; 
+        padding: 15px; 
+        background-color: #00ff00; 
+        color: #000000; 
+        border: none; 
+        border-radius: 5px; 
+        cursor: pointer; 
+        font-size: 16px; 
+        font-weight: bold;
+        margin-top: 10px;
+        transition: 0.3s;
+    }
+    .btn:hover { 
+        box-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
+        background-color: #33ff33;
+    }
+    .cancel { 
+        text-align: center; 
+        display: block; 
+        margin-top: 20px; 
+        color: #888888; 
+        text-decoration: none; 
+        transition: 0.2s;
+    }
+    .cancel:hover { color: #00ff00; }
+</style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="pageTitle">Add New Product</h1>
+        <form id="productForm">
+            <input type="hidden" id="productId">
+            
+            <div class="form-group">
+                <label>Product Name</label>
+                <input type="text" id="name" required placeholder="e.g., Pastel Bracelet">
+            </div>
+            
+            <div class="form-group">
+                <label>Price (Rs)</label>
+                <input type="number" id="price" step="0.01" required placeholder="0.00">
+            </div>
+            
+            <div class="form-group">
+                <label>Quantity</label>
+                <input type="number" id="quantity" required placeholder="0">
+            </div>
+            
+            <button type="submit" class="btn">Save Product</button>
+        </form>
+        <a href="index.html" class="cancel">Cancel and Go Back</a>
+    </div>
+
+    <script>
+        // Your specific localhost port!
+        const apiUrl = 'http://localhost:5185/api/products';
+        const urlParams = new URLSearchParams(window.location.search);
+        const editId = urlParams.get('id');
+
+        // If editing, load the existing data into the form
+        if (editId) {
+            document.getElementById('pageTitle').innerText = "Edit Product";
+            document.getElementById('productId').value = editId;
+            
+            fetch(`${apiUrl}/${editId}`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('name').value = data.name;
+                    document.getElementById('price').value = data.price;
+                    document.getElementById('quantity').value = data.quantity;
+                });
+        }
+
+        document.getElementById('productForm').addEventListener('submit', async (e) => {
+            e.preventDefault(); // Stop page from reloading
+            
+            const id = document.getElementById('productId').value;
+            const name = document.getElementById('name').value;
+            const price = parseFloat(document.getElementById('price').value);
+            const quantity = parseInt(document.getElementById('quantity').value);
+
+            // ASSIGNMENT REQUIREMENT: FORM VALIDATION
+            if (price < 0 || quantity < 0) {
+                alert("Validation Error: Price and Quantity cannot be negative numbers.");
+                return;
+            }
+            if (name.trim() === "") {
+                alert("Validation Error: Product Name cannot be empty.");
+                return;
+            }
+
+            const payload = { name, price, quantity };
+            if (id) payload.id = id;
+
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${apiUrl}/${id}` : apiUrl;
+
+            await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            // Redirect back to the main dashboard after saving
+            window.location.href = 'index.html'; 
+        });
+    </script>
+</body>
+</html>
